@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mini_market
+    ports:
+      - "5432:5432"
+
+  user-service:
+    build: ./microservices/user-service
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market
+      - JWT_SECRET_KEY=super-secret
+    depends_on:
+      - postgres
