@@ -20,3 +20,12 @@ services:
       - JWT_SECRET_KEY=super-secret
     depends_on:
       - postgres
+
+  product-service:
+    build: ./microservices/product-service
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market?sslmode=disable
+    depends_on:
+      - postgres
