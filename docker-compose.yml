@@ -29,3 +29,12 @@ services:
       - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market?sslmode=disable
     depends_on:
       - postgres
+
+  inventory-service:
+    build: ./microservices/inventory-service
+    ports:
+      - "5001:5001"
+    environment:
+      - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market
+    depends_on:
+      - postgres
