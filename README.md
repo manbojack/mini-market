@@ -33,6 +33,14 @@
 | 10 | **gateway-service**      | Go     | API Gateway: маршрутизация запросов ко всем сервисам, авторизация                  |
 
 
+### 🔁 Связи между сервисами
+- user-service ↔ order-service, cart-service
+- cart-service ↔ product-service, inventory-service
+- order-service ↔ payment-service, inventory-service
+- order-service → notification-service
+- review-service ↔ user-service, product-service
+- analytics-service ← Kafka events от order-service, payment-service, product-service
+
 ### 🚧 В планах:  
 - <b>Мониторинг</b>
 - <b>Сбор логов</b>
