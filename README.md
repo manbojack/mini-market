@@ -41,6 +41,7 @@
 - review-service ↔ user-service, product-service
 - analytics-service ← Kafka events от order-service, payment-service, product-service
 
-### 🚧 В планах:  
+### 🚧 После реализации микросервисов:
+- <b>CI/CD</b>
 - <b>Мониторинг</b>
 - <b>Сбор логов</b>
