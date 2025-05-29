@@ -38,3 +38,12 @@ services:
       - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market
     depends_on:
       - postgres
+
+  order-service:
+    build: ./microservices/order-service
+    ports:
+      - "5002:5002"
+    environment:
+      - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market?sslmode=disable
+    depends_on:
+      - postgres
