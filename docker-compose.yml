@@ -10,6 +10,8 @@ services:
       POSTGRES_DB: mini_market
     ports:
       - "5432:5432"
+    volumes:
+      - ./microservices/cart-service/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   user-service:
     build: ./microservices/user-service
@@ -63,3 +65,16 @@ services:
       - "8083:8080"
     environment:
       - PORT=8080
+
+  cart-service:
+    build: ./microservices/cart-service
+    ports:
+      - "5005:5000"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: mini_market
+      DB_USER: user
+      DB_PASSWORD: password
+    depends_on:
+      - postgres
