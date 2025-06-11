@@ -56,3 +56,10 @@ services:
       - DATABASE_URL=postgresql://user:password@postgres:5432/mini_market
     depends_on:
       - postgres
+
+  notification-service:
+    build: ./microservices/notification-service
+    ports:
+      - "8083:8080"
+    environment:
+      - PORT=8080
