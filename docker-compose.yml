@@ -47,3 +47,12 @@ services:
       - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market?sslmode=disable
     depends_on:
       - postgres
+
+  payment-service:
+    build: ./microservices/payment-service
+    ports:
+      - "8004:8004"
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/mini_market
+    depends_on:
+      - postgres
