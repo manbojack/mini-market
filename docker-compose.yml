@@ -13,6 +13,7 @@ services:
     volumes:
       - ./microservices/cart-service/init.sql:/docker-entrypoint-initdb.d/cart-service_init.sql
       - ./microservices/review-service/init.sql:/docker-entrypoint-initdb.d/review-service_init.sql
+      - ./microservices/analytics-service/init.sql:/docker-entrypoint-initdb.d/analytics-service_init.sql
 
   user-service:
     build: ./microservices/user-service
@@ -84,5 +85,18 @@ services:
     build: ./microservices/review-service
     ports:
       - "8081:8080"
+    depends_on:
+      - postgres
+
+  analytics-service:
+    build: ./microservices/analytics-service
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=mini_market
+      - DB_USER=user
+      - DB_PASSWORD=password
+    ports:
+      - "5004:5004"
     depends_on:
       - postgres
