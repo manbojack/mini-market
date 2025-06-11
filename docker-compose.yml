@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # База данных PostgreSQL
   postgres:
     image: postgres:13
     restart: always
@@ -11,84 +12,185 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./microservices/cart-service/init.sql:/docker-entrypoint-initdb.d/cart-service_init.sql
-      - ./microservices/review-service/init.sql:/docker-entrypoint-initdb.d/review-service_init.sql
-      - ./microservices/analytics-service/init.sql:/docker-entrypoint-initdb.d/analytics-service_init.sql
-      - ./microservices/gateway-service/init.sql:/docker-entrypoint-initdb.d/gateway-service_init.sql
+      - postgres_data:/var/lib/postgresql/data
+      - ./microservices/user-service/init.sql:/docker-entrypoint-initdb.d/01_user-service_init.sql
+      - ./microservices/product-service/init.sql:/docker-entrypoint-initdb.d/02_product-service_init.sql
+      - ./microservices/inventory-service/init.sql:/docker-entrypoint-initdb.d/03_inventory-service_init.sql
+      - ./microservices/order-service/init.sql:/docker-entrypoint-initdb.d/04_order-service_init.sql
+      - ./microservices/payment-service/init.sql:/docker-entrypoint-initdb.d/05_payment-service_init.sql
+      - ./microservices/cart-service/init.sql:/docker-entrypoint-initdb.d/06_cart-service_init.sql
+      - ./microservices/review-service/init.sql:/docker-entrypoint-initdb.d/07_review-service_init.sql
+      - ./microservices/analytics-service/init.sql:/docker-entrypoint-initdb.d/08_analytics-service_init.sql
+      - ./microservices/gateway-service/init.sql:/docker-entrypoint-initdb.d/09_gateway-service_init.sql
+    networks:
+      - mini-market-network
 
+  # Redis для кэширования
+  redis:
+    image: redis:6-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - mini-market-network
+
+  # Kafka для обмена сообщениями
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - mini-market-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - mini-market-network
+
+  # Сервис пользователей (Python)
   user-service:
     build: ./microservices/user-service
     ports:
       - "5000:5000"
     environment:
       - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market
-      - JWT_SECRET_KEY=super-secret
+      - JWT_SECRET_KEY=super-secret-jwt-key-change-in-production
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
       - postgres
+      - redis
+    networks:
+      - mini-market-network
 
+  # Сервис товаров (Go)
   product-service:
     build: ./microservices/product-service
     ports:
       - "8080:8080"
     environment:
       - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market?sslmode=disable
+      - REDIS_URL=redis://redis:6379/1
     depends_on:
       - postgres
+      - redis
+    networks:
+      - mini-market-network
 
+  # Сервис инвентаря (Python)
   inventory-service:
     build: ./microservices/inventory-service
     ports:
       - "5001:5001"
     environment:
       - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market
+      - REDIS_URL=redis://redis:6379/2
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
       - postgres
+      - redis
+      - kafka
+    networks:
+      - mini-market-network
 
+  # Сервис заказов (Go)
   order-service:
     build: ./microservices/order-service
     ports:
       - "5002:5002"
     environment:
       - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market?sslmode=disable
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - USER_SERVICE_URL=http://user-service:5000
+      - INVENTORY_SERVICE_URL=http://inventory-service:5001
+      - PAYMENT_SERVICE_URL=http://payment-service:8004
     depends_on:
       - postgres
+      - kafka
+      - user-service
+      - inventory-service
+    networks:
+      - mini-market-network
 
+  # Сервис платежей (Python)
   payment-service:
     build: ./microservices/payment-service
     ports:
       - "8004:8004"
     environment:
       - DATABASE_URL=postgresql://user:password@postgres:5432/mini_market
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
       - postgres
+      - kafka
+    networks:
+      - mini-market-network
 
+  # Сервис уведомлений (Go)
   notification-service:
     build: ./microservices/notification-service
     ports:
       - "8083:8080"
     environment:
       - PORT=8080
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USER=your-email@gmail.com
+      - SMTP_PASS=your-app-password
+    depends_on:
+      - kafka
+    networks:
+      - mini-market-network
 
+  # Сервис корзины (Python)
   cart-service:
     build: ./microservices/cart-service
     ports:
       - "5005:5000"
     environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: mini_market
-      DB_USER: user
-      DB_PASSWORD: password
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=mini_market
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - REDIS_URL=redis://redis:6379/3
+      - PRODUCT_SERVICE_URL=http://product-service:8080
     depends_on:
       - postgres
+      - redis
+      - product-service
+    networks:
+      - mini-market-network
 
+  # Сервис отзывов (Go)
   review-service:
     build: ./microservices/review-service
     ports:
       - "8081:8080"
+    environment:
+      - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market?sslmode=disable
+      - USER_SERVICE_URL=http://user-service:5000
+      - PRODUCT_SERVICE_URL=http://product-service:8080
     depends_on:
       - postgres
+      - user-service
+      - product-service
+    networks:
+      - mini-market-network
 
+  # Сервис аналитики (Python)
   analytics-service:
     build: ./microservices/analytics-service
     environment:
@@ -97,15 +199,49 @@ services:
       - DB_NAME=mini_market
       - DB_USER=user
       - DB_PASSWORD=password
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - REDIS_URL=redis://redis:6379/4
     ports:
       - "5004:5004"
     depends_on:
       - postgres
+      - kafka
+      - redis
+    networks:
+      - mini-market-network
 
+  # API Gateway (Go)
   gateway-service:
     build: ./microservices/gateway-service
     ports:
       - "8000:8000"
+    environment:
+      - PORT=8000
+      - USER_SERVICE_URL=http://user-service:5000
+      - PRODUCT_SERVICE_URL=http://product-service:8080
+      - INVENTORY_SERVICE_URL=http://inventory-service:5001
+      - ORDER_SERVICE_URL=http://order-service:5002
+      - PAYMENT_SERVICE_URL=http://payment-service:8004
+      - CART_SERVICE_URL=http://cart-service:5000
+      - REVIEW_SERVICE_URL=http://review-service:8080
+      - ANALYTICS_SERVICE_URL=http://analytics-service:5004
+      - JWT_SECRET_KEY=super-secret-jwt-key-change-in-production
     depends_on:
       - user-service
       - product-service
+      - inventory-service
+      - order-service
+      - payment-service
+      - cart-service
+      - review-service
+      - analytics-service
+    networks:
+      - mini-market-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  mini-market-network:
+    driver: bridge
