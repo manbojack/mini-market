@@ -14,6 +14,7 @@ services:
       - ./microservices/cart-service/init.sql:/docker-entrypoint-initdb.d/cart-service_init.sql
       - ./microservices/review-service/init.sql:/docker-entrypoint-initdb.d/review-service_init.sql
       - ./microservices/analytics-service/init.sql:/docker-entrypoint-initdb.d/analytics-service_init.sql
+      - ./microservices/gateway-service/init.sql:/docker-entrypoint-initdb.d/gateway-service_init.sql
 
   user-service:
     build: ./microservices/user-service
@@ -100,3 +101,11 @@ services:
       - "5004:5004"
     depends_on:
       - postgres
+
+  gateway-service:
+    build: ./microservices/gateway-service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - user-service
+      - product-service
