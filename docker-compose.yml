@@ -82,8 +82,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_started
     networks:
       - mini-market-network
 
@@ -137,10 +135,6 @@ services:
       postgres:
         condition: service_healthy
       kafka:
-        condition: service_started
-      user-service:
-        condition: service_started
-      inventory-service:
         condition: service_started
     networks:
       - mini-market-network
@@ -214,10 +208,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      user-service:
-        condition: service_started
-      product-service:
-        condition: service_started
     networks:
       - mini-market-network
 
@@ -260,23 +250,6 @@ services:
       - REVIEW_SERVICE_URL=http://review-service:8080
       - ANALYTICS_SERVICE_URL=http://analytics-service:5004
       - JWT_SECRET_KEY=super-secret-jwt-key-change-in-production
-    depends_on:
-      user-service:
-        condition: service_started
-      product-service:
-        condition: service_started
-      inventory-service:
-        condition: service_started
-      order-service:
-        condition: service_started
-      payment-service:
-        condition: service_started
-      cart-service:
-        condition: service_started
-      review-service:
-        condition: service_started
-      analytics-service:
-        condition: service_started
     networks:
       - mini-market-network
 
