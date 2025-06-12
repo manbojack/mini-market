@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.9'
 
 services:
   # База данных PostgreSQL
@@ -24,6 +24,11 @@ services:
       - ./microservices/gateway-service/init.sql:/docker-entrypoint-initdb.d/09_gateway-service_init.sql
     networks:
       - mini-market-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d mini_market"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   # Redis для кэширования
   redis:
@@ -36,7 +41,7 @@ services:
     networks:
       - mini-market-network
 
-  # Kafka для обмена сообщениями
+  # Kafka + Zookeeper для обмена сообщениями
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
@@ -65,7 +70,6 @@ services:
     networks:
       - mini-market-network
 
-
   # Сервис пользователей (Python)
   user-service:
     build: ./microservices/user-service
@@ -76,8 +80,10 @@ services:
       - JWT_SECRET_KEY=super-secret-jwt-key-change-in-production
       - REDIS_URL=redis://redis:6379/0
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - mini-market-network
 
@@ -90,8 +96,10 @@ services:
       - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market?sslmode=disable
       - REDIS_URL=redis://redis:6379/1
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - mini-market-network
 
@@ -105,9 +113,12 @@ services:
       - REDIS_URL=redis://redis:6379/2
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
-      - postgres
-      - redis
-      - kafka
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_started
     networks:
       - mini-market-network
 
@@ -123,10 +134,14 @@ services:
       - INVENTORY_SERVICE_URL=http://inventory-service:5001
       - PAYMENT_SERVICE_URL=http://payment-service:8004
     depends_on:
-      - postgres
-      - kafka
-      - user-service
-      - inventory-service
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      user-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
     networks:
       - mini-market-network
 
@@ -139,8 +154,10 @@ services:
       - DATABASE_URL=postgresql://user:password@postgres:5432/mini_market
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
     networks:
       - mini-market-network
 
@@ -157,7 +174,8 @@ services:
       - SMTP_USER=your-email@gmail.com
       - SMTP_PASS=your-app-password
     depends_on:
-      - kafka
+      kafka:
+        condition: service_started
     networks:
       - mini-market-network
 
@@ -175,9 +193,12 @@ services:
       - REDIS_URL=redis://redis:6379/3
       - PRODUCT_SERVICE_URL=http://product-service:8080
     depends_on:
-      - postgres
-      - redis
-      - product-service
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      product-service:
+        condition: service_started
     networks:
       - mini-market-network
 
@@ -191,9 +212,12 @@ services:
       - USER_SERVICE_URL=http://user-service:5000
       - PRODUCT_SERVICE_URL=http://product-service:8080
     depends_on:
-      - postgres
-      - user-service
-      - product-service
+      postgres:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      product-service:
+        condition: service_started
     networks:
       - mini-market-network
 
@@ -211,9 +235,12 @@ services:
     ports:
       - "5004:5004"
     depends_on:
-      - postgres
-      - kafka
-      - redis
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_started
     networks:
       - mini-market-network
 
@@ -234,14 +261,22 @@ services:
       - ANALYTICS_SERVICE_URL=http://analytics-service:5004
       - JWT_SECRET_KEY=super-secret-jwt-key-change-in-production
     depends_on:
-      - user-service
-      - product-service
-      - inventory-service
-      - order-service
-      - payment-service
-      - cart-service
-      - review-service
-      - analytics-service
+      user-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+      cart-service:
+        condition: service_started
+      review-service:
+        condition: service_started
+      analytics-service:
+        condition: service_started
     networks:
       - mini-market-network
 
