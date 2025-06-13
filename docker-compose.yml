@@ -65,6 +65,8 @@ services:
   # Сервис пользователей (Python)
   user-service:
     build: ./microservices/user-service
+    expose:
+      - "5000"
     environment:
       - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market
       - JWT_SECRET_KEY=super-secret-jwt-key-change-in-production
@@ -78,6 +80,8 @@ services:
   # Сервис товаров (Go)
   product-service:
     build: ./microservices/product-service
+    expose:
+      - "8000"
     environment:
       - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market?sslmode=disable
       - REDIS_URL=redis://redis:6379/1
@@ -92,6 +96,8 @@ services:
   # Сервис инвентаря (Python)
   inventory-service:
     build: ./microservices/inventory-service
+    expose:
+      - "5000"
     environment:
       - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market
       - REDIS_URL=redis://redis:6379/2
@@ -109,6 +115,8 @@ services:
   # Сервис заказов (Go)
   order-service:
     build: ./microservices/order-service
+    expose:
+      - "8000"
     environment:
       - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market?sslmode=disable
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
@@ -126,6 +134,8 @@ services:
   # Сервис платежей (Python)
   payment-service:
     build: ./microservices/payment-service
+    expose:
+      - "5000"
     environment:
       - DATABASE_URL=postgresql://user:password@postgres:5432/mini_market
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
@@ -140,6 +150,8 @@ services:
   # Сервис уведомлений (Go)
   notification-service:
     build: ./microservices/notification-service
+    expose:
+      - "8000"
     environment:
       - PORT=8080
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
@@ -156,6 +168,8 @@ services:
   # Сервис корзины (Python)
   cart-service:
     build: ./microservices/cart-service
+    expose:
+      - "5000"
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -177,6 +191,8 @@ services:
   # Сервис отзывов (Go)
   review-service:
     build: ./microservices/review-service
+    expose:
+      - "8000"
     environment:
       - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market?sslmode=disable
       - USER_SERVICE_URL=http://user-service:5000
@@ -190,6 +206,8 @@ services:
   # Сервис аналитики (Python)
   analytics-service:
     build: ./microservices/analytics-service
+    expose:
+      - "5000"
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
