@@ -48,8 +48,8 @@ func main() {
     r.HandleFunc("/products/{id}", updateProduct).Methods("PUT")
     r.HandleFunc("/products/{id}", deleteProduct).Methods("DELETE")
 
-    fmt.Println("Product service listening on :8080")
-    log.Fatal(http.ListenAndServe(":8080", r))
+    fmt.Println("Product service listening on :8000")
+    log.Fatal(http.ListenAndServe(":8000", r))
 }
 
 func createTable() error {
