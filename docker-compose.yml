@@ -211,6 +211,8 @@ services:
   # API Gateway (Go)
   gateway-service:
     build: ./microservices/gateway-service
+    ports:
+      - 8080:8080
     environment:
       - PORT=8000
       - USER_SERVICE_URL=http://user-service:5000
