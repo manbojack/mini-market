@@ -8,17 +8,20 @@ import (
 func main() {
     router := gin.Default()
 
-    // Маршрут для пользователей
+    // Прокси для users
     router.Any("/users/*proxyPath", func(c *gin.Context) {
         proxyRequest(c, "http://user-service:5000", c.Param("proxyPath"))
     })
 
-    // Маршрут для продуктов
+    // Прокси для products
     router.Any("/products/*proxyPath", func(c *gin.Context) {
-        proxyRequest(c, "http://product-service:8080", c.Param("proxyPath"))
+        proxyRequest(c, "http://product-service:8000",c.Param("proxyPath"))
     })
 
-    // Другие маршруты аналогично...
+    // Прокси для analytics
+    router.Any("/analytics/*proxyPath", func(c *gin.Context) {
+        proxyRequest(c, "http://analytics-service:5000", "/analytics"+c.Param("proxyPath"))
+    })
 
     router.Run(":8080")
 }

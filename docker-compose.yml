@@ -1,9 +1,38 @@
 version: '3.9'
 
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  mini-market-network:
+    driver: bridge
+
 services:
+  # API Gateway (Go)
+  gateway:
+    container_name: gateway
+    build: ./gateway
+    ports:
+      - 8080:8080
+    environment:
+      - PORT=8080
+      - USER_SERVICE_URL=http://user-service:5000
+      - PRODUCT_SERVICE_URL=http://product-service:8000
+      - INVENTORY_SERVICE_URL=http://inventory-service:5000
+      - ORDER_SERVICE_URL=http://order-service:5000
+      - PAYMENT_SERVICE_URL=http://payment-service:8000
+      - CART_SERVICE_URL=http://cart-service:5000
+      - REVIEW_SERVICE_URL=http://review-service:8000
+      - ANALYTICS_SERVICE_URL=http://analytics-service:5000
+      - JWT_SECRET_KEY=super-secret-jwt-key-change-in-production
+    networks:
+      - mini-market-network
+
   # База данных PostgreSQL
-  postgres:
-    image: postgres:13
+  database:
+    container_name: database
+    build: ./database
     restart: always
     environment:
       POSTGRES_USER: user
@@ -11,22 +40,13 @@ services:
       POSTGRES_DB: mini_market
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./microservices/user-service/init.sql:/docker-entrypoint-initdb.d/01_user-service_init.sql
-      - ./microservices/product-service/init.sql:/docker-entrypoint-initdb.d/02_product-service_init.sql
-      - ./microservices/inventory-service/init.sql:/docker-entrypoint-initdb.d/03_inventory-service_init.sql
-      - ./microservices/order-service/init.sql:/docker-entrypoint-initdb.d/04_order-service_init.sql
-      - ./microservices/payment-service/init.sql:/docker-entrypoint-initdb.d/05_payment-service_init.sql
-      - ./microservices/cart-service/init.sql:/docker-entrypoint-initdb.d/06_cart-service_init.sql
-      - ./microservices/review-service/init.sql:/docker-entrypoint-initdb.d/07_review-service_init.sql
-      - ./microservices/analytics-service/init.sql:/docker-entrypoint-initdb.d/08_analytics-service_init.sql
-      - ./microservices/gateway-service/init.sql:/docker-entrypoint-initdb.d/09_gateway-service_init.sql
-    networks:
-      - mini-market-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d mini_market"]
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - mini-market-network
 
   # Redis для кэширования
   redis:
@@ -68,11 +88,11 @@ services:
     expose:
       - "5000"
     environment:
-      - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market
+      - DATABASE_URI=postgresql://user:password@database:5432/mini_market
       - JWT_SECRET_KEY=super-secret-jwt-key-change-in-production
       - REDIS_URL=redis://redis:6379/0
     depends_on:
-      postgres:
+      database:
         condition: service_healthy
     networks:
       - mini-market-network
@@ -83,10 +103,10 @@ services:
     expose:
       - "8000"
     environment:
-      - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market?sslmode=disable
+      - DATABASE_URI=postgresql://user:password@database:5432/mini_market?sslmode=disable
       - REDIS_URL=redis://redis:6379/1
     depends_on:
-      postgres:
+      database:
         condition: service_healthy
       redis:
         condition: service_started
@@ -99,11 +119,11 @@ services:
     expose:
       - "5000"
     environment:
-      - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market
+      - DATABASE_URI=postgresql://user:password@database:5432/mini_market
       - REDIS_URL=redis://redis:6379/2
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
-      postgres:
+      database:
         condition: service_healthy
       redis:
         condition: service_started
@@ -118,13 +138,13 @@ services:
     expose:
       - "8000"
     environment:
-      - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market?sslmode=disable
+      - DATABASE_URI=postgresql://user:password@database:5432/mini_market?sslmode=disable
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - USER_SERVICE_URL=http://user-service:5000
-      - INVENTORY_SERVICE_URL=http://inventory-service:5001
-      - PAYMENT_SERVICE_URL=http://payment-service:8004
+      - INVENTORY_SERVICE_URL=http://inventory-service:5000
+      - PAYMENT_SERVICE_URL=http://payment-service:5000
     depends_on:
-      postgres:
+      database:
         condition: service_healthy
       kafka:
         condition: service_started
@@ -137,10 +157,10 @@ services:
     expose:
       - "5000"
     environment:
-      - DATABASE_URL=postgresql://user:password@postgres:5432/mini_market
+      - DATABASE_URL=postgresql://user:password@database:5432/mini_market
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
-      postgres:
+      database:
         condition: service_healthy
       kafka:
         condition: service_started
@@ -177,9 +197,9 @@ services:
       - DB_USER=user
       - DB_PASSWORD=password
       - REDIS_URL=redis://redis:6379/3
-      - PRODUCT_SERVICE_URL=http://product-service:8080
+      - PRODUCT_SERVICE_URL=http://product-service:8000
     depends_on:
-      postgres:
+      database:
         condition: service_healthy
       redis:
         condition: service_started
@@ -194,11 +214,11 @@ services:
     expose:
       - "8000"
     environment:
-      - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market?sslmode=disable
+      - DATABASE_URI=postgresql://user:password@database:5432/mini_market?sslmode=disable
       - USER_SERVICE_URL=http://user-service:5000
-      - PRODUCT_SERVICE_URL=http://product-service:8080
+      - PRODUCT_SERVICE_URL=http://product-service:8000
     depends_on:
-      postgres:
+      database:
         condition: service_healthy
     networks:
       - mini-market-network
@@ -217,7 +237,7 @@ services:
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - REDIS_URL=redis://redis:6379/4
     depends_on:
-      postgres:
+      database:
         condition: service_healthy
       kafka:
         condition: service_started
@@ -226,29 +246,3 @@ services:
     networks:
       - mini-market-network
 
-  # API Gateway (Go)
-  gateway-service:
-    build: ./microservices/gateway-service
-    ports:
-      - 8080:8080
-    environment:
-      - PORT=8000
-      - USER_SERVICE_URL=http://user-service:5000
-      - PRODUCT_SERVICE_URL=http://product-service:8080
-      - INVENTORY_SERVICE_URL=http://inventory-service:5001
-      - ORDER_SERVICE_URL=http://order-service:5002
-      - PAYMENT_SERVICE_URL=http://payment-service:8004
-      - CART_SERVICE_URL=http://cart-service:5000
-      - REVIEW_SERVICE_URL=http://review-service:8080
-      - ANALYTICS_SERVICE_URL=http://analytics-service:5004
-      - JWT_SECRET_KEY=super-secret-jwt-key-change-in-production
-    networks:
-      - mini-market-network
-
-volumes:
-  postgres_data:
-  redis_data:
-
-networks:
-  mini-market-network:
-    driver: bridge

@@ -1,0 +1,5 @@
+.git
+.gitignore
+README.md
+Dockerfile
+postgres_data/
