@@ -121,8 +121,8 @@ services:
       - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market?sslmode=disable
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - USER_SERVICE_URL=http://user-service:5000
-      - INVENTORY_SERVICE_URL=http://inventory-service:5001
-      - PAYMENT_SERVICE_URL=http://payment-service:8004
+      - INVENTORY_SERVICE_URL=http://inventory-service:5000
+      - PAYMENT_SERVICE_URL=http://payment-service:5000
     depends_on:
       postgres:
         condition: service_healthy
@@ -177,7 +177,7 @@ services:
       - DB_USER=user
       - DB_PASSWORD=password
       - REDIS_URL=redis://redis:6379/3
-      - PRODUCT_SERVICE_URL=http://product-service:8080
+      - PRODUCT_SERVICE_URL=http://product-service:8000
     depends_on:
       postgres:
         condition: service_healthy
@@ -196,7 +196,7 @@ services:
     environment:
       - DATABASE_URI=postgresql://user:password@postgres:5432/mini_market?sslmode=disable
       - USER_SERVICE_URL=http://user-service:5000
-      - PRODUCT_SERVICE_URL=http://product-service:8080
+      - PRODUCT_SERVICE_URL=http://product-service:8000
     depends_on:
       postgres:
         condition: service_healthy
@@ -232,15 +232,15 @@ services:
     ports:
       - 8080:8080
     environment:
-      - PORT=8000
+      - PORT=8080
       - USER_SERVICE_URL=http://user-service:5000
-      - PRODUCT_SERVICE_URL=http://product-service:8080
-      - INVENTORY_SERVICE_URL=http://inventory-service:5001
-      - ORDER_SERVICE_URL=http://order-service:5002
-      - PAYMENT_SERVICE_URL=http://payment-service:8004
+      - PRODUCT_SERVICE_URL=http://product-service:8000
+      - INVENTORY_SERVICE_URL=http://inventory-service:5000
+      - ORDER_SERVICE_URL=http://order-service:8000
+      - PAYMENT_SERVICE_URL=http://payment-service:5000
       - CART_SERVICE_URL=http://cart-service:5000
-      - REVIEW_SERVICE_URL=http://review-service:8080
-      - ANALYTICS_SERVICE_URL=http://analytics-service:5004
+      - REVIEW_SERVICE_URL=http://review-service:8000
+      - ANALYTICS_SERVICE_URL=http://analytics-service:5000
       - JWT_SECRET_KEY=super-secret-jwt-key-change-in-production
     networks:
       - mini-market-network
