@@ -1,5 +1,13 @@
 version: '3.9'
 
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  mini-market-network:
+    driver: bridge
+
 services:
   # API Gateway (Go)
   gateway:
@@ -245,10 +253,3 @@ services:
     networks:
       - mini-market-network
 
-volumes:
-  postgres_data:
-  redis_data:
-
-networks:
-  mini-market-network:
-    driver: bridge
