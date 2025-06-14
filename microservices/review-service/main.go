@@ -38,8 +38,8 @@ func main() {
     router.HandleFunc("/reviews/{id}", updateReview).Methods("PUT")
     router.HandleFunc("/reviews/{id}", deleteReview).Methods("DELETE")
 
-    fmt.Println("Starting review-service on :8080")
-    log.Fatal(http.ListenAndServe(":8080", router))
+    fmt.Println("Starting review-service on :8000")
+    log.Fatal(http.ListenAndServe(":8000", router))
 }
 
 func createReview(w http.ResponseWriter, r *http.Request) {

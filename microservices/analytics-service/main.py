@@ -57,4 +57,4 @@ def add_order_analytics():
     return jsonify({'message': 'Analytics data inserted successfully'}), 201
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5004)
+    app.run(host='0.0.0.0', port=5000)

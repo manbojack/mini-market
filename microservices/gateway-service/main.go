@@ -20,7 +20,7 @@ func main() {
 
     // Другие маршруты аналогично...
 
-    router.Run(":8000")
+    router.Run(":8080")
 }
 
 func proxyRequest(c *gin.Context, targetURL, proxyPath string) {
