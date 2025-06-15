@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 
-DB_HOST = os.getenv('DB_HOST', 'postgres')
+DB_HOST = os.getenv('DB_HOST', 'database')
 DB_PORT = os.getenv('DB_PORT', '5432')
 DB_NAME = os.getenv('DB_NAME', 'mini_market')
 DB_USER = os.getenv('DB_USER', 'user')
