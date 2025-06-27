@@ -23,8 +23,12 @@ func main() {
     })
 
     // Прокси для analytics
+    router.Any("/analytics", func(c *gin.Context) {
+        proxyRequest(c, "http://analytics-service:5000", "/")
+    })
+
     router.Any("/analytics/*proxyPath", func(c *gin.Context) {
-        proxyRequest(c, "http://analytics-service:5000", "/analytics"+c.Param("proxyPath"))
+        proxyRequest(c, "http://analytics-service:5000", c.Param("proxyPath"))
     })
 
     router.Run(":8080")
