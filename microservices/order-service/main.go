@@ -16,7 +16,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "5002"
+		port = "8000"
 	}
 
 	log.Printf("Order service is running on port %s", port)
