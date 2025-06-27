@@ -14,8 +14,12 @@ func main() {
     })
 
     // Прокси для products
+    router.Any("/products", func(c *gin.Context) {
+        proxyRequest(c, "http://product-service:8000", "/products")
+    })
+
     router.Any("/products/*proxyPath", func(c *gin.Context) {
-        proxyRequest(c, "http://product-service:8000",c.Param("proxyPath"))
+        proxyRequest(c, "http://product-service:8000", "/products"+c.Param("proxyPath"))
     })
 
     // Прокси для analytics
