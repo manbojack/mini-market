@@ -48,6 +48,19 @@ services:
     networks:
       - mini-market-network
 
+  # Веб-интерфейс
+  frontend:
+    container_name: frontend
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway
+    environment:
+      - VITE_GATEWAY_URL=http://gateway:8080
+    networks:
+      - mini-market-network
+
   # Redis для кэширования
   redis:
     image: redis:6-alpine
