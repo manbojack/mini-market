@@ -51,6 +51,7 @@ services:
   # Redis для кэширования
   redis:
     image: redis:6-alpine
+    container_name: redis
     restart: always
     volumes:
       - redis_data:/data
