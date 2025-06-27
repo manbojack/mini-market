@@ -37,6 +37,11 @@ func main() {
         proxyRequest(c, "http://analytics-service:5000", path)
     })
 
+    // Прокси для cart
+    router.Any("/cart/*proxyPath", func(c *gin.Context) {
+        proxyRequest(c, "http://cart-service:5000", "/cart"+c.Param("proxyPath"))
+    })
+
     router.Run(":8080")
 }
 
